@@ -231,6 +231,180 @@ void __sub(VM *vm, Opcode opcode, Args a1, Args a2) {
     return;
 }
 
+/*
+ * __mul - Multiply register by value
+ * @vm: VM instance
+ * @opcode: MUL opcode
+ * @a1: Register selector
+ * @a2: 16-bit value to multiply by
+ *
+ * Sets carry flag if result > 0xFFFF (overflow)
+ * Sets zero flag if result is 0
+ */
+void __mul(VM *vm, Opcode opcode, Args a1, Args a2) {
+    int32 result;
+    Reg *reg;
+
+    /* Select target register */
+    switch (a1) {
+        case 0x00: reg = &(vm->c.r.ax); break;
+        case 0x01: reg = &(vm->c.r.bx); break;
+        case 0x02: reg = &(vm->c.r.cx); break;
+        case 0x03: reg = &(vm->c.r.dx); break;
+        default:
+            error(vm, ErrInstr);
+    }
+
+    /* Perform multiplication */
+    result = $4 *reg * $4 a2;
+    
+    /* Clear arithmetic flags */
+    vm $flags &= 0x0F;
+    
+    /* Set carry flag if overflow */
+    if (result > 0xFFFF)
+        vm $flags |= 0x20;
+    
+    /* Update register (truncate to 16-bit) */
+    *reg = $2 (result & 0xFFFF);
+    
+    /* Set zero flag if result is 0 */
+    if (*reg == 0)
+        vm $flags |= 0x10;
+
+    return;
+}
+
+/*
+ * __div - Divide register by value
+ * @vm: VM instance
+ * @opcode: DIV opcode
+ * @a1: Register selector
+ * @a2: 16-bit divisor
+ *
+ * Stores quotient in register
+ * Errors on division by zero
+ * Sets zero flag if result is 0
+ */
+void __div(VM *vm, Opcode opcode, Args a1, Args a2) {
+    Reg *reg;
+
+    /* Check for division by zero */
+    if (a2 == 0)
+        error(vm, ErrInstr);
+
+    /* Select target register */
+    switch (a1) {
+        case 0x00: reg = &(vm->c.r.ax); break;
+        case 0x01: reg = &(vm->c.r.bx); break;
+        case 0x02: reg = &(vm->c.r.cx); break;
+        case 0x03: reg = &(vm->c.r.dx); break;
+        default:
+            error(vm, ErrInstr);
+    }
+
+    /* Perform division */
+    *reg = *reg / a2;
+    
+    /* Clear arithmetic flags */
+    vm $flags &= 0x0F;
+    
+    /* Set zero flag if result is 0 */
+    if (*reg == 0)
+        vm $flags |= 0x10;
+
+    return;
+}
+
+/*
+ * __inc - Increment register by 1
+ * @vm: VM instance
+ * @opcode: INC opcode
+ * @a1: Register selector
+ * @a2: Unused
+ *
+ * Sets carry flag on overflow (0xFFFF -> 0x0000)
+ * Sets zero flag if result is 0
+ */
+void __inc(VM *vm, Opcode opcode, Args a1, Args a2) {
+    Reg *reg;
+    int32 result;
+
+    /* Select target register */
+    switch (a1) {
+        case 0x00: reg = &(vm->c.r.ax); break;
+        case 0x01: reg = &(vm->c.r.bx); break;
+        case 0x02: reg = &(vm->c.r.cx); break;
+        case 0x03: reg = &(vm->c.r.dx); break;
+        default:
+            error(vm, ErrInstr);
+    }
+
+    /* Increment with overflow detection */
+    result = $4 *reg + 1;
+    
+    /* Clear arithmetic flags */
+    vm $flags &= 0x0F;
+    
+    /* Set carry flag if overflow */
+    if (result > 0xFFFF)
+        vm $flags |= 0x20;
+    
+    /* Update register */
+    *reg = $2 (result & 0xFFFF);
+    
+    /* Set zero flag if result is 0 */
+    if (*reg == 0)
+        vm $flags |= 0x10;
+
+    return;
+}
+
+/*
+ * __dec - Decrement register by 1
+ * @vm: VM instance
+ * @opcode: DEC opcode
+ * @a1: Register selector
+ * @a2: Unused
+ *
+ * Sets carry flag on underflow (0x0000 -> 0xFFFF)
+ * Sets zero flag if result is 0
+ */
+void __dec(VM *vm, Opcode opcode, Args a1, Args a2) {
+    Reg *reg;
+    int32 result;
+
+    /* Select target register */
+    switch (a1) {
+        case 0x00: reg = &(vm->c.r.ax); break;
+        case 0x01: reg = &(vm->c.r.bx); break;
+        case 0x02: reg = &(vm->c.r.cx); break;
+        case 0x03: reg = &(vm->c.r.dx); break;
+        default:
+            error(vm, ErrInstr);
+    }
+
+    /* Decrement with underflow detection */
+    result = $4 *reg - 1;
+    
+    /* Clear arithmetic flags */
+    vm $flags &= 0x0F;
+    
+    /* Set carry flag if underflow */
+    if (result < 0)
+        vm $flags |= 0x20;
+    
+    /* Update register */
+    *reg = $2 (result & 0xFFFF);
+    
+    /* Set zero flag if result is 0 */
+    if (*reg == 0)
+        vm $flags |= 0x10;
+
+    return;
+}
+
+
 
 /* ============================================================================
  * Stack Operations
