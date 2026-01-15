@@ -125,4 +125,94 @@ typedef Memory *Stack;
 
 #define segfault(x) error((x), ErrSegv)
 
+/* ============================================================================
+ * Opcodes and Instructions
+ * ========================================================================= */
+
+enum e_opcode {
+    nop  = 0x01,
+    hlt  = 0x02,
+    mov  = 0x08,    /* 0x08 - 0x0f */
+    ste  = 0x10,    /* Set equal flag */
+    cle  = 0x11,    /* Clear equal flag */
+    stg  = 0x12,    /* Set greater-than flag */
+    clg  = 0x13,    /* Clear greater-than flag */
+    sth  = 0x14,    /* Set higher flag */
+    clh  = 0x15,    /* Clear higher flag */
+    stl  = 0x16,    /* Set lower flag */
+    cll  = 0x17,    /* Clear lower flag */
+    push = 0x1a,
+    pop  = 0x1b
+};
+typedef enum e_opcode Opcode;
+
+/* Instruction map structure - maps opcodes to instruction sizes */
+struct s_instrmap {
+    Opcode o;
+    int8 s;
+};
+typedef struct s_instrmap IM;
+
+/* Instruction structure with flexible array for arguments */
+typedef int16 Args;
+struct s_instruction {
+    Opcode o;
+    Args a[];   /* 0-2 bytes */
+};
+typedef struct s_instruction Instruction;
+
+/* Static instruction map - defines size of each opcode */
+static IM instrmap[] = {
+    { nop,  0x01 },
+    { hlt,  0x01 },
+    { mov,  0x03 },
+        { 0x09, 0x03 }, { 0x0a, 0x03 }, { 0x0b, 0x03 }, { 0x0c, 0x03 },
+        { 0x0d, 0x03 }, { 0x0e, 0x03 }, { 0x0f, 0x03 },
+    { ste,  0x01 },
+    { stg,  0x01 },
+    { stl,  0x01 },
+    { sth,  0x01 },
+    { cle,  0x01 },
+    { clg,  0x01 },
+    { cll,  0x01 },
+    { clh,  0x01 },
+    { push, 0x03 },
+    { pop,  0x03 }
+};
+#define IMs (sizeof(instrmap) / sizeof(struct s_instrmap))
+
+/* ============================================================================
+ * Function Declarations
+ * ========================================================================= */
+
+/* Flag operations */
+void __ste(VM*, Opcode, Args, Args);
+void __stg(VM*, Opcode, Args, Args);
+void __sth(VM*, Opcode, Args, Args);
+void __stl(VM*, Opcode, Args, Args);
+void __cle(VM*, Opcode, Args, Args);
+void __clg(VM*, Opcode, Args, Args);
+void __clh(VM*, Opcode, Args, Args);
+void __cll(VM*, Opcode, Args, Args);
+
+/* Stack operations */
+void __push(VM*, Opcode, Args, Args);
+void __pop(VM*, Opcode, Args, Args);
+
+/* MOV instruction */
+void __mov(VM*, Opcode, Args, Args);
+
+/* Core VM functions */
+void error(VM*, Errorcode);
+void execinstr(VM*, Program*);
+void execute(VM*);
+Program *i(Instruction*);
+Instruction *i0(Opcode);
+Instruction *i1(Opcode, Args);
+Instruction *i2(Opcode, Args, Args);
+int8 map(Opcode);
+VM *virtualmachine(void);
+int main(int, char**);
+
+
 #endif /* H_VM_H */
