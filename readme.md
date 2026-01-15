@@ -22,6 +22,8 @@ Registers (16-bit each):
   IP - Instruction pointer
 
 FLAGS:
+  Bit 5: C - Carry flag (arithmetic overflow/underflow)
+  Bit 4: Z - Zero flag (result is zero)
   Bit 3: E - Equal flag
   Bit 2: G - Greater-than flag
   Bit 1: H - Higher byte flag
@@ -45,6 +47,12 @@ FLAGS:
 | 0x17 | CLL | Clear lower flag |
 | 0x1a | PUSH | Push register to stack |
 | 0x1b | POP | Pop stack to register |
+| **0x20** | **ADD** | **Add value to register** |
+| **0x21** | **SUB** | **Subtract value from register** |
+| **0x22** | **MUL** | **Multiply register by value** |
+| **0x23** | **DIV** | **Divide register by value** |
+| **0x24** | **INC** | **Increment register** |
+| **0x25** | **DEC** | **Decrement register** |
 
 ## Building
 
