@@ -7,6 +7,51 @@
 #include "h-vm.h"
 
 /* ============================================================================
+ * Flag Operations
+ * ========================================================================= */
+
+/*
+ * Flag operations manipulate the FLAGS register bits:
+ *   Bit 3: E - Equal flag
+ *   Bit 2: G - Greater-than flag
+ *   Bit 1: H - Higher byte flag
+ *   Bit 0: L - Lower byte flag
+ */
+
+void __ste(VM *vm, Opcode opcode, Args a1, Args a2) {
+    vm $flags |= 0x08;
+}
+
+void __stg(VM *vm, Opcode opcode, Args a1, Args a2) {
+    vm $flags |= 0x04;
+}
+
+void __sth(VM *vm, Opcode opcode, Args a1, Args a2) {
+    vm $flags |= 0x02;
+}
+
+void __stl(VM *vm, Opcode opcode, Args a1, Args a2) {
+    vm $flags |= 0x01;
+}
+
+void __cle(VM *vm, Opcode opcode, Args a1, Args a2) {
+    vm $flags &= 0x07;
+}
+
+void __clg(VM *vm, Opcode opcode, Args a1, Args a2) {
+    vm $flags &= 0x0c;
+}
+
+void __clh(VM *vm, Opcode opcode, Args a1, Args a2) {
+    vm $flags &= 0x0d;
+}
+
+void __cll(VM *vm, Opcode opcode, Args a1, Args a2) {
+    vm $flags &= 0x0e;
+}
+
+
+/* ============================================================================
  * VM Core Functions
  * ========================================================================= */
 
