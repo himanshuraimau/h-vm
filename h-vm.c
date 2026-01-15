@@ -737,6 +737,14 @@ void execinstr(VM* vm, Program *p) {
             );
             break;
 
+        case 4:
+            a1 = *(p+1);  /* Register selector */
+            a2 = (
+                (((int16)*(p+3) & 0xff) << 8)
+                    | ((int16)*(p+2) & 0xff)
+            );
+            break;
+
         case 5:
             a1 = (
                 (((int16)*(p+2) & 0xff) << 8)
@@ -777,6 +785,14 @@ void execinstr(VM* vm, Program *p) {
         case cll:    __cll(vm, (Opcode)*p, a1, a2); break;
         case push:  __push(vm, (Opcode)*p, a1, a2); break;
         case pop:    __pop(vm, (Opcode)*p, a1, a2); break;
+        
+        /* Arithmetic operations */
+        case add:    __add(vm, (Opcode)*p, a1, a2); break;
+        case sub:    __sub(vm, (Opcode)*p, a1, a2); break;
+        case mul:    __mul(vm, (Opcode)*p, a1, a2); break;
+        case div_op: __div(vm, (Opcode)*p, a1, a2); break;
+        case inc:    __inc(vm, (Opcode)*p, a1, a2); break;
+        case dec:    __dec(vm, (Opcode)*p, a1, a2); break;
     }
 
     return;
