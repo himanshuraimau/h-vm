@@ -198,7 +198,7 @@ void __add(VM *vm, Opcode opcode, Args a1, Args a2) {
  * Sets carry flag if underflow occurs
  */
 void __sub(VM *vm, Opcode opcode, Args a1, Args a2) {
-    int32 result;
+    int result;  /* Signed for underflow detection */
     Reg *reg;
 
     /* Select target register */
@@ -372,7 +372,7 @@ void __inc(VM *vm, Opcode opcode, Args a1, Args a2) {
  */
 void __dec(VM *vm, Opcode opcode, Args a1, Args a2) {
     Reg *reg;
-    int32 result;
+    int result;  /* Signed for underflow detection */
 
     /* Select target register */
     switch (a1) {
@@ -581,6 +581,10 @@ void error(VM* vm, Errorcode e) {
                 printf("E flag set\n");
             if (gt(vm))
                 printf("GT flag set\n");
+            if (zero_flag(vm))
+                printf("Z flag set\n");
+            if (carry_flag(vm))
+                printf("C flag set\n");
             
             printhex(vm->m + 0xffff - 32, 32, 0);
             break;
@@ -832,14 +836,16 @@ void execute(VM *vm) {
  * ========================================================================= */
 
 /*
- * main - Entry point with example program
+ * main - Entry point with arithmetic test program
  *
- * Example program:
- *   mov ax, 0x04
- *   ste              ; Set equal flag
- *   push ax
- *   mov bx, 0x5005
- *   pop bx
+ * Test program:
+ *   mov ax, 0x05     ; ax = 5
+ *   add ax, 0x03     ; ax = 8 (5+3)
+ *   sub ax, 0x02     ; ax = 6 (8-2)
+ *   mul ax, 0x02     ; ax = 12 (6*2)
+ *   div ax, 0x03     ; ax = 4 (12/3)
+ *   inc ax           ; ax = 5
+ *   dec ax           ; ax = 4
  *   hlt
  */
 int main(int argc, char *argv[]) {
@@ -848,9 +854,20 @@ int main(int argc, char *argv[]) {
 
     vm = virtualmachine();
     prog = exampleprogram(vm,
-        i(i1(mov, 0x04)), i(i0(ste)), i(i1(push, 0x00)),
-        i(i1(0x09, 0x5005)), i(i1(pop, 0x01)),
-        
+        /* mov ax, 0x05 */
+        i(i1(mov, 0x05)),
+        /* add ax, 0x03 */
+        i(i2(add, 0x00, 0x03)),
+        /* sub ax, 0x02 */
+        i(i2(sub, 0x00, 0x02)),
+        /* mul ax, 0x02 */
+        i(i2(mul, 0x00, 0x02)),
+        /* div ax, 0x03 */
+        i(i2(div_op, 0x00, 0x03)),
+        /* inc ax */
+        i(i1(inc, 0x00)),
+        /* dec ax */
+        i(i1(dec, 0x00)),
         
         i(i0(hlt)) 
     );
