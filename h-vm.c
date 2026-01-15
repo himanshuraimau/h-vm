@@ -139,6 +139,108 @@ void __mov(VM *vm, Opcode opcode, Args a1, Args a2) {
     return;
 }
 
+/* ============================================================================
+ * Stack Operations
+ * ========================================================================= */
+
+/*
+ * __push - Push register value onto stack
+ * @vm: VM instance
+ * @opcode: PUSH opcode
+ * @a1: Register selector (0x00=ax, 0x01=bx, 0x02=cx, 0x03=dx)
+ * @a2: Unused
+ *
+ * Stack grows downward from 0xFFFF
+ * Checks for stack overflow and flag conflicts
+ */
+void __push(VM *vm, Opcode opcode, Args a1, Args a2) {
+    int16 src;
+    int16 *dst;
+    void *mem;
+
+    if (higher(vm) || lower(vm))
+        error(vm, ErrInstr);
+    if (vm $sp < 2)
+        error(vm, ErrInstr);
+    if (vm $sp < (vm->b - 2))
+        error(vm, ErrSegv);
+
+    switch (a1) {
+        /* push ax = 0x00 */
+        case 0x00:
+            src = vm $ax;
+            break;
+        /* push bx = 0x01 */
+        case 0x01:
+            src = vm $bx;
+            break;
+        /* push cx = 0x02 */
+        case 0x02:
+            src = vm $cx;
+            break;
+        /* push dx = 0x03 */
+        case 0x03:
+            src = vm $dx;
+            break;
+        default:
+            error(vm, ErrInstr);
+    }
+
+    vm $sp -= 2;
+    mem = vm->m + vm $sp;
+    dst = mem;
+    *dst = src;
+
+    return;
+}
+
+/*
+ * __pop - Pop value from stack into register
+ * @vm: VM instance
+ * @opcode: POP opcode
+ * @a1: Register selector (0x00=ax, 0x01=bx, 0x02=cx, 0x03=dx)
+ * @a2: Unused
+ *
+ * Checks for stack underflow and flag conflicts
+ */
+void __pop(VM *vm, Opcode opcode, Args a1, Args a2) {
+    int16 *src;
+    void *mem;
+
+    if (higher(vm) || lower(vm))
+        error(vm, ErrInstr);
+    if (vm $sp > 0xfffd)
+        error(vm, ErrInstr);
+
+    mem = vm->m + vm $sp;
+    src = mem;
+
+    switch (a1) {
+        /* pop ax = 0x00 */
+        case 0x00:
+            vm $ax = *src;
+            break;
+        /* pop bx = 0x01 */
+        case 0x01:
+            vm $bx = *src;
+            break;
+        /* pop cx = 0x02 */
+        case 0x02:
+            vm $cx = *src;
+            break;
+        /* pop dx = 0x03 */
+        case 0x03:
+            vm $dx = *src;
+            break;
+        default:
+            error(vm, ErrInstr);
+    }
+    vm $sp += 2;
+
+    return;
+}
+
+
 
 
 /* ============================================================================
