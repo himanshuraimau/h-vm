@@ -437,4 +437,148 @@ Program *exampleprogram(VM *vm, ...) {
     return p;
 }
 
+/* ============================================================================
+ * Execution Engine
+ * ========================================================================= */
+
+/*
+ * execinstr - Execute a single instruction
+ * @vm: VM instance
+ * @p: Pointer to instruction in memory
+ *
+ * Parses instruction arguments and dispatches to appropriate handler
+ */
+void execinstr(VM* vm, Program *p) {
+    Args a1, a2;
+    int16 size;
+
+    a1 = a2 = 0;
+    size = map(*p);
+
+    switch (size) {
+        case 1:
+            break;
+
+        case 2:
+            a1 = *(p+1);
+            break;
+
+        case 3:
+            a1 = (
+                (((int16)*(p+2) & 0xff) << 8)
+                    | ((int16)*(p+1) & 0xff)
+            );
+            break;
+
+        case 5:
+            a1 = (
+                (((int16)*(p+2) & 0xff) << 8)
+                    | ((int16)*(p+1) & 0xff)
+            );
+
+            a2 = (
+                (((int16)*(p+4) & 0xff) << 8)
+                    | ((int16)*(p+3) & 0xff)
+            );
+            break;
+
+        default:
+            segfault(vm);
+            break;
+    }
+
+    switch (*p) {
+        case mov: 
+        case 0x09 ... 0x0f:
+            __mov(vm, (Opcode)*p, a1, a2);
+            break;
+
+        case nop:
+            break;
+        
+        case hlt:
+            error(vm, SysHlt);
+            break;
+
+        case ste:    __ste(vm, (Opcode)*p, a1, a2); break;
+        case stg:    __stg(vm, (Opcode)*p, a1, a2); break;
+        case sth:    __sth(vm, (Opcode)*p, a1, a2); break;
+        case stl:    __stl(vm, (Opcode)*p, a1, a2); break;
+        case cle:    __cle(vm, (Opcode)*p, a1, a2); break;
+        case clg:    __clg(vm, (Opcode)*p, a1, a2); break;
+        case clh:    __clh(vm, (Opcode)*p, a1, a2); break;
+        case cll:    __cll(vm, (Opcode)*p, a1, a2); break;
+        case push:  __push(vm, (Opcode)*p, a1, a2); break;
+        case pop:    __pop(vm, (Opcode)*p, a1, a2); break;
+    }
+
+    return;
+}
+
+/*
+ * execute - Main execution loop
+ * @vm: VM instance
+ *
+ * Executes instructions from memory until HLT is encountered
+ */
+void execute(VM *vm) {
+    int32 brkaddr;
+    Program *pp;
+    int16 size;
+
+    assert(vm && *vm->m);
+    size = 0;
+    brkaddr = ((int32)vm->m + vm->b);
+    pp = (Program *)&vm->m;
+
+    do {
+        vm $ip += size;
+        pp += size;
+
+        if ((int32)pp > brkaddr)
+            segfault(vm);
+        size = map(*pp);
+        execinstr(vm, pp);
+    } while (*pp != (Opcode)hlt);
+
+    return;
+}
+
+/* ============================================================================
+ * Main Entry Point
+ * ========================================================================= */
+
+/*
+ * main - Entry point with example program
+ *
+ * Example program:
+ *   mov ax, 0x04
+ *   ste              ; Set equal flag
+ *   push ax
+ *   mov bx, 0x5005
+ *   pop bx
+ *   hlt
+ */
+int main(int argc, char *argv[]) {
+    Program *prog;
+    VM *vm;
+
+    vm = virtualmachine();
+    prog = exampleprogram(vm,
+        i(i1(mov, 0x04)), i(i0(ste)), i(i1(push, 0x00)),
+        i(i1(0x09, 0x5005)), i(i1(pop, 0x01)),
+        
+        
+        i(i0(hlt)) 
+    );
+    printf("vm   = %p (sz: %d)\n", vm, sizeof(struct s_vm));
+    printf("prog = %p\n", prog);
+
+    execute(vm);
+
+    printhex($1 prog, (map(mov)+map(nop)+map(hlt)), ' ');
+
+    return 0;
+}
+
 #pragma GCC diagnostic pop
