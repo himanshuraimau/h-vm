@@ -140,6 +140,99 @@ void __mov(VM *vm, Opcode opcode, Args a1, Args a2) {
 }
 
 /* ============================================================================
+ * Arithmetic Operations
+ * ========================================================================= */
+
+/*
+ * __add - Add value to register
+ * @vm: VM instance
+ * @opcode: ADD opcode
+ * @a1: Register selector (0x00=AX, 0x01=BX, 0x02=CX, 0x03=DX)
+ * @a2: 16-bit value to add
+ *
+ * Sets zero flag if result is 0
+ * Sets carry flag if overflow occurs
+ */
+void __add(VM *vm, Opcode opcode, Args a1, Args a2) {
+    int32 result;
+    Reg *reg;
+
+    /* Select target register */
+    switch (a1) {
+        case 0x00: reg = &(vm->c.r.ax); break;
+        case 0x01: reg = &(vm->c.r.bx); break;
+        case 0x02: reg = &(vm->c.r.cx); break;
+        case 0x03: reg = &(vm->c.r.dx); break;
+        default:
+            error(vm, ErrInstr);
+    }
+
+    /* Perform addition with overflow detection */
+    result = $4 *reg + $4 a2;
+    
+    /* Clear arithmetic flags */
+    vm $flags &= 0x0F;  /* Clear Z and C flags */
+    
+    /* Set carry flag if overflow */
+    if (result > 0xFFFF)
+        vm $flags |= 0x20;  /* Set C flag */
+    
+    /* Update register (truncate to 16-bit) */
+    *reg = $2 (result & 0xFFFF);
+    
+    /* Set zero flag if result is 0 */
+    if (*reg == 0)
+        vm $flags |= 0x10;  /* Set Z flag */
+
+    return;
+}
+
+/*
+ * __sub - Subtract value from register
+ * @vm: VM instance
+ * @opcode: SUB opcode
+ * @a1: Register selector (0x00=AX, 0x01=BX, 0x02=CX, 0x03=DX)
+ * @a2: 16-bit value to subtract
+ *
+ * Sets zero flag if result is 0
+ * Sets carry flag if underflow occurs
+ */
+void __sub(VM *vm, Opcode opcode, Args a1, Args a2) {
+    int32 result;
+    Reg *reg;
+
+    /* Select target register */
+    switch (a1) {
+        case 0x00: reg = &(vm->c.r.ax); break;
+        case 0x01: reg = &(vm->c.r.bx); break;
+        case 0x02: reg = &(vm->c.r.cx); break;
+        case 0x03: reg = &(vm->c.r.dx); break;
+        default:
+            error(vm, ErrInstr);
+    }
+
+    /* Perform subtraction with underflow detection */
+    result = $4 *reg - $4 a2;
+    
+    /* Clear arithmetic flags */
+    vm $flags &= 0x0F;  /* Clear Z and C flags */
+    
+    /* Set carry flag if underflow */
+    if (result < 0)
+        vm $flags |= 0x20;  /* Set C flag */
+    
+    /* Update register (handle underflow wrap-around) */
+    *reg = $2 (result & 0xFFFF);
+    
+    /* Set zero flag if result is 0 */
+    if (*reg == 0)
+        vm $flags |= 0x10;  /* Set Z flag */
+
+    return;
+}
+
+
+/* ============================================================================
  * Stack Operations
  * ========================================================================= */
 
