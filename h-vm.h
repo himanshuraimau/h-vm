@@ -54,6 +54,58 @@ typedef unsigned long long int int64;
 typedef unsigned char Errorcode;
 
 /* ============================================================================
+ * Register and CPU Structures
+ * ========================================================================= */
+
+/*
+ * Architecture Overview:
+ *   16-bit registers: AX, BX, CX, DX, SP, IP
+ *   FLAGS register with condition flags
+ *   65KB memory (full 16-bit address space)
+ */
+
+typedef unsigned short int Reg;
+
+struct s_registers {
+    Reg ax;     /* Accumulator */
+    Reg bx;     /* Base register */
+    Reg cx;     /* Counter register */
+    Reg dx;     /* Data register */
+    Reg sp;     /* Stack pointer */
+    Reg ip;     /* Instruction pointer */
+    Reg flags;  /* Status flags */
+    /*
+     * FLAGS layout:
+     *   Bit 3: E - Equal flag
+     *   Bit 2: G - Greater-than flag
+     *   Bit 1: H - Higher byte flag
+     *   Bit 0: L - Lower byte flag
+     */
+};
+typedef struct s_registers Registers;
+
+struct s_cpu {
+    Registers r;
+};
+typedef struct s_cpu CPU;
+
+/* ============================================================================
+ * Memory and VM Structures
+ * ========================================================================= */
+
+typedef int8 Memory[((int16)(-1))];  /* 65KB memory */
+typedef int8 Program;
+
+struct s_vm {
+    CPU c;
+    Memory m;
+    int16 b;    /* Break/program end pointer */
+};
+typedef struct s_vm VM;
+
+typedef Memory *Stack;
+
+/* ============================================================================
  * Register Access Macros
  * ========================================================================= */
 
