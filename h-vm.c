@@ -742,11 +742,20 @@ void execinstr(VM* vm, Program *p) {
             break;
 
         case 4:
-            a1 = *(p+1);  /* Register selector */
-            a2 = (
-                (((int16)*(p+3) & 0xff) << 8)
-                    | ((int16)*(p+2) & 0xff)
-            );
+            /* For 4-byte instructions created with i2(op, reg, value):
+             * Memory layout: [op][a0_lo][a0_hi][a1_lo]
+             * where a0=register (we only need low byte), a1=value (only low byte available)
+             * 
+             * Since i2 stores 16-bit args and we copy 3 bytes, we get:
+             * p+1 = low byte of a[0] (register)
+             * p+2 = high byte of a[0] (should be 0)
+             * p+3 = low byte of a[1] (value)
+             * 
+             * For small values this works, but we need to fix this properly
+             * by only reading the low byte as the value.
+             */
+            a1 = *(p+1);  /* Register selector (low byte of a[0]) */
+            a2 = *(p+3);  /* Value (low byte of a[1]) */
             break;
 
         case 5:
