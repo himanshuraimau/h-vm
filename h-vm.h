@@ -156,7 +156,14 @@ enum e_opcode {
     stl  = 0x16,    /* Set lower flag */
     cll  = 0x17,    /* Clear lower flag */
     push = 0x1a,
-    pop  = 0x1b
+    pop  = 0x1b,
+    /* Arithmetic operations */
+    add  = 0x20,    /* ADD reg, value */
+    sub  = 0x21,    /* SUB reg, value */
+    mul  = 0x22,    /* MUL reg, value */
+    div_op = 0x23,  /* DIV reg, value (div is reserved keyword) */
+    inc  = 0x24,    /* INC reg */
+    dec  = 0x25     /* DEC reg */
 };
 typedef enum e_opcode Opcode;
 
@@ -191,7 +198,14 @@ static IM instrmap[] = {
     { cll,  0x01 },
     { clh,  0x01 },
     { push, 0x03 },
-    { pop,  0x03 }
+    { pop,  0x03 },
+    /* Arithmetic operations - 4 bytes for 16-bit immediate values */
+    { add,  0x04 },
+    { sub,  0x04 },
+    { mul,  0x04 },
+    { div_op, 0x04 },
+    { inc,  0x02 },
+    { dec,  0x02 }
 };
 #define IMs (sizeof(instrmap) / sizeof(struct s_instrmap))
 
@@ -215,6 +229,14 @@ void __pop(VM*, Opcode, Args, Args);
 
 /* MOV instruction */
 void __mov(VM*, Opcode, Args, Args);
+
+/* Arithmetic operations */
+void __add(VM*, Opcode, Args, Args);
+void __sub(VM*, Opcode, Args, Args);
+void __mul(VM*, Opcode, Args, Args);
+void __div(VM*, Opcode, Args, Args);
+void __inc(VM*, Opcode, Args, Args);
+void __dec(VM*, Opcode, Args, Args);
 
 /* Core VM functions */
 void error(VM*, Errorcode);
