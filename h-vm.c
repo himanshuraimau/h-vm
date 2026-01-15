@@ -50,6 +50,96 @@ void __cll(VM *vm, Opcode opcode, Args a1, Args a2) {
     vm $flags &= 0x0e;
 }
 
+/* ============================================================================
+ * MOV Instruction
+ * ========================================================================= */
+
+/*
+ * __mov - Move data to registers
+ * @vm: VM instance
+ * @opcode: Specific MOV variant (0x08-0x0f)
+ * @a1: Source value or address
+ * @a2: Unused for most variants
+ *
+ * Supports:
+ *   - Full 16-bit register moves
+ *   - High byte (H flag) and low byte (L flag) operations
+ *   - Memory address operations (placeholders)
+ */
+void __mov(VM *vm, Opcode opcode, Args a1, Args a2) {
+    int16 dst;
+
+    dst = $2 a1;
+    if (higher(vm) && lower(vm))
+        error(vm, ErrInstr);
+
+    switch (opcode) {
+        /* mov ax - 0x08 */
+        case 0x08:
+            if (higher(vm))
+                vm $ax = (((Reg)a1 << 8) | (vm $ax & 0xFF));
+            else if (lower(vm))
+                vm $ax = ((Reg)a1 | (vm $ax & 0xFF00));
+            else
+                vm $ax = (Reg)a1;
+            break;
+
+        /* mov bx - 0x09 */
+        case 0x09:
+            if (higher(vm))
+                vm $bx = (((Reg)a1 << 8) | (vm $bx & 0xFF));
+            else if (lower(vm))
+                vm $bx = ((Reg)a1 | (vm $bx & 0xFF00));
+            else
+                vm $bx = (Reg)a1;
+            break;
+
+        /* mov cx - 0x0a */
+        case 0x0a:
+            if (higher(vm))
+                vm $cx = (((Reg)a1 << 8) | (vm $cx & 0xFF));
+            else if (lower(vm))
+                vm $cx = ((Reg)a1 | (vm $cx & 0xFF00));
+            else
+                vm $cx = (Reg)a1;
+            break;
+
+        /* mov dx - 0x0b */
+        case 0x0b:
+            if (higher(vm))
+                vm $dx = (((Reg)a1 << 8) | (vm $dx & 0xFF));
+            else if (lower(vm))
+                vm $dx = ((Reg)a1 | (vm $dx & 0xFF00));
+            else
+                vm $dx = (Reg)a1;
+            break;
+
+        /* mov sp - 0x0c */
+        case 0x0c:
+            vm $sp = (Reg)dst;
+            break;
+
+        /* mov [addr],ax - 0x0d */
+        case 0x0d:
+            break;
+
+        /* mov [addr],bx - 0x0e */
+        case 0x0e:
+            break;
+
+        /* mov [addr],dx - 0x0f */
+        case 0x0f:
+            break;
+
+        default:
+            error(vm, ErrInstr);
+            break;
+    }
+
+    return;
+}
+
+
 
 /* ============================================================================
  * VM Core Functions
