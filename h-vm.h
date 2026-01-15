@@ -123,6 +123,20 @@ typedef Memory *Stack;
 #define higher(x)   (!!((x $flags & 0x02) >> 1))
 #define lower(x)    (!!(x $flags & 0x01))
 
+/* Arithmetic flag macros */
+#define zero_flag(x)  (!!((x $flags & 0x10) >> 4))
+#define carry_flag(x) (!!((x $flags & 0x20) >> 5))
+
+/*
+ * Extended FLAGS register layout:
+ *   Bit 5: C - Carry flag (arithmetic overflow/underflow)
+ *   Bit 4: Z - Zero flag (result is zero)
+ *   Bit 3: E - Equal flag
+ *   Bit 2: G - Greater-than flag
+ *   Bit 1: H - Higher byte flag
+ *   Bit 0: L - Lower byte flag
+ */
+
 #define segfault(x) error((x), ErrSegv)
 
 /* ============================================================================
