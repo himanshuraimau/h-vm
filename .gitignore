@@ -2,8 +2,7 @@
 *.o
 h-vm
 
-# Reference implementation
-birchvm/
+
 
 # Editor files
 *.swp
